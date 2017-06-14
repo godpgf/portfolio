@@ -11,29 +11,22 @@ class BasePortfolio(object):
     def __init__(self):
         self.stock_pool = list()
 
-    def add_stock(self, code, data, min_expect_return, max_expect_return):
+    def add_stock(self, code, close, expect_score = None):
+        close.name = code
         st_des = {
             'code':code,
-            'data':data,
-            'min_expect_return':min_expect_return,
-            'max_expect_return':max_expect_return
+            'close':close,
+            'expect_score':expect_score
         }
         self.stock_pool.append(st_des)
 
     def get_returns(self):
-        def filter_stock_data(code, st):
-            st = st['Close']
-            st.name = code
-            return st
 
-        d = pd.DataFrame([filter_stock_data(st_des['code'], st_des['data']) for st_des in self.stock_pool])
+        d = pd.DataFrame([st_des['close'] for st_des in self.stock_pool])
         ##转置
         data = d.T
         returns = np.log(data / data.shift(1))
         return returns
-
-    def get_expect_returns(self):
-        return [(st_des['min_expect_return'], st_des['max_expect_return']) for st_des in self.stock_pool]
 
 
 class MinVariancePortfolio(BasePortfolio):
@@ -70,9 +63,8 @@ class MaxSharpePortfolio(BasePortfolio):
         bnds = tuple((0, 1) for x in range(noa))
 
         returns_cov = returns.cov()
-        #returns_expect = returns.mean()
-        returns_expect = self.get_expect_returns()
-        returns_expect = np.array([(re[0] + re[1]) * 0.5 / (re[1] - re[0]) for re in returns_expect])
+        returns_mean = returns.mean()
+        returns_expect = np.array([self.stock_pool[i]['expect_score'] if self.stock_pool[i]['expect_score'] else returns_mean[i] for i in range(noa)])
 
         def min_sharpe(weights):
             weights = np.array(weights)
