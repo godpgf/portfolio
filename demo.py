@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt #绘图
 
 def get_stock_data(code, dataProxy, dt='2015-12-31', bar_count = 230):
     st = dataProxy.history(code, pd.Timestamp(dt),bar_count,'1d','close')
-    st.name = code
+    #st.name = code
     return st
 
 if __name__ == '__main__':
